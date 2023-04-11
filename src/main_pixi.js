@@ -8,7 +8,7 @@ async function main() {
     background: "#2ea6c9",
   });
   document.body.appendChild(app.view);
-
+  //test
   PIXI.Assets.add("background", "../public/images/background.png");
   PIXI.Assets.add("foreground", "../public/images/foreground.png");
   PIXI.Assets.add("cloud_1", "../public/images/cloud.png");
