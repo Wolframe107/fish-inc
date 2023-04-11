@@ -1,0 +1,13 @@
+
+body{
+    margin:0;
+}
+
+canvas {
+    display:block;
+    object-fit: cover;
+}
+
+.swal-text {
+    text-align: center;
+}

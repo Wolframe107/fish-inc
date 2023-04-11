@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="public/images/favicon.ico">
+    <link rel="stylesheet" href="public/style.css">
+    <script src="https://pixijs.download/release/pixi.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/pixi-filters@latest/dist/pixi-filters.js"></script> -->
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <title>FishyFish</title>
+  </head>
+
+  <body>
+    
+    <div class="game">
+        <script src="../pixi-filters.js"></script>
+        <script>
+          const filter = new PIXI.filters.PixelateFilter(4);
+          const filter_low = new PIXI.filters.PixelateFilter(3);
+        </script>
+        <script src="../src/upgrade_data.js"></script>
+        <script src="../src/setup.js"></script>
+        <script src="../src/main_pixi.js"></script>
+    </div>
+  </body>
+</html>
