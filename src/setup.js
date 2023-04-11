@@ -39,6 +39,7 @@ async function data_init() {
     setCookie("fishRate", 0.0, 100);
     setCookie("bleedrate", 0.0, 100);
     setCookie("bleedval", 0.0, 100);
+    setCookie("endReached", 0.0, 100);
     setCookie("formattingStyle", "default", 100);
     setCookie("data", JSON.stringify(data), 100);
 

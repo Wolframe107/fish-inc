@@ -8,7 +8,9 @@ async function main() {
     background: "#2ea6c9",
   });
   document.body.appendChild(app.view);
-  //test 
+
+  // Load assets -------------------------
+  // Playfield
   PIXI.Assets.add("background", "../public/images/background.png");
   PIXI.Assets.add("foreground", "../public/images/foreground.png");
   PIXI.Assets.add("cloud_1", "../public/images/cloud.png");
@@ -17,12 +19,16 @@ async function main() {
   PIXI.Assets.add("sunrays", "../public/images/sunrays.png");
   PIXI.Assets.add("boat", "../public/images/boat.png");
 
+  // Endscreen
   PIXI.Assets.add("endScreen", "../public/images/endgame_background.png");
 
+  // UI
   PIXI.Assets.add("topBar", "../public/images/topBar.png");
   PIXI.Assets.add("fish", "../public/images/fish.png");
+  PIXI.Assets.add("deadFish", "../public/images/deadFish.png");
   PIXI.Assets.add("format", "../public/images/format.png");
 
+  // Shop
   PIXI.Assets.add("shop_icon", "../public/images/shop_icon.png");
   PIXI.Assets.add("shop_icon_open", "../public/images/shop_icon_open.png");
   PIXI.Assets.add(
@@ -40,6 +46,7 @@ async function main() {
   PIXI.Assets.add("dredger", "../public/images/dredger.png");
   PIXI.Assets.add("trawler", "../public/images/trawler.png");
 
+  // Bird
   PIXI.Assets.add("bird", "../public/images/seagull.png");
   PIXI.Assets.add("explosion", "../public/images/bird_explosion.png");
 
@@ -54,6 +61,7 @@ async function main() {
     "endScreen",
     "topBar",
     "fish",
+    "deadFish",
     "format",
     "shop_icon",
     "shop_icon_open",
@@ -183,7 +191,7 @@ async function main() {
     [25000000, 1000],
     [50000000, 5000],
     [200000000, 10000],
-    [500000000, 250000]
+    [500000000, 250000],
   ];
 
   // Playfield ----------------------------------
@@ -242,31 +250,10 @@ async function main() {
   playField.addChild(boat);
   playField.addChild(foreground);
 
-  // Endscreen ----------------------------------
-
-  let endOverlay = new PIXI.Container();
-  let endScreen = PIXI.Sprite.from(assets.endScreen);
-
-  endScreen.anchor.set(0.5);
-  endScreen.interactive = true;
-  endScreen.filters = [filter];
-
-  let endScreen_text = new PIXI.Text(
-    "GAME OVER\n\nYou've extracted all available fish from \nthe ocean! This is truly a tragedy..\n\n\n A game by Mille Kåge & Matias Eriksson\nThanks for playing!",
-    endScreen_style
-  );
-
-  endScreen_text.anchor.set(0.5);
-  endOverlay.position.set(screen.width / 2, screen.height / 2 - 100);
-  endOverlay.visible = false;
-  endOverlay.addChild(endScreen);
-  endOverlay.addChild(endScreen_text);
-  app.stage.addChild(endOverlay);
-
   // Bleedrate + Ticker -------------------------
 
   function bleedcalc(baserate, bleedsheet) {
-    for (let i = bleedsheet.length - 1; i >= 0 ; i--) {
+    for (let i = bleedsheet.length - 1; i >= 0; i--) {
       if (bleedsheet[i][0] < baserate) {
         return parseInt(bleedsheet[i][1]);
       }
@@ -285,15 +272,33 @@ async function main() {
 
     if (model.bleedrate != 0) {
       bloomStrength += delta;
-
-      if (model.fishRate <= 0) {
-        endOverlay.visible = true;
-        model.fishRate = 0;
-        refreshTexts();
-      }
-
       if (bloomStrength > 80) {
         bloomStrength = 0;
+      }
+
+      // End game
+      if (model.fishRate <= 0) {
+        endOverlay.visible = true;
+        black_overlay.visible = true;
+
+        shop_button_open.interactive = false;
+        shop_button_open.buttonMode = false;
+        shop_button_closed.interactive = false;
+        shop_button_closed.buttonMode = false;
+        shop_container.visible = false;
+
+        fish.visible = false;
+        let deadFish = PIXI.Sprite.from(assets.deadFish);
+        deadFish.scale.set(0.14);
+        deadFish.x = 50;
+        deadFish.y = 25;
+
+        deadFish.filters = [filter];
+
+        topBar.addChild(deadFish);
+
+        model.fishRate = 0;
+        refreshTexts();
       }
     }
 
@@ -311,7 +316,6 @@ async function main() {
         if (model.bleedrate > 0) {
           bleed_visualisation(model.bleedval);
         }
-
 
         second = 0.0;
         refreshTexts();
@@ -789,6 +793,37 @@ async function main() {
   shop_container.addChild(lift_netter);
   shop_container.addChild(dredger);
   shop_container.addChild(trawler);
+
+  // Endscreen ----------------------------------
+
+  let endOverlay = new PIXI.Container();
+  let endScreen = PIXI.Sprite.from(assets.endScreen);
+
+  endScreen.anchor.set(0.5);
+  endScreen.interactive = true;
+  endScreen.filters = [filter];
+
+  let endScreen_text = new PIXI.Text(
+    "GAME OVER\n\nYou've extracted all available fish from \nthe ocean! Oh no!\n\n\n A game by Mille Kåge & Matias Eriksson\nThanks for playing!",
+    endScreen_style
+  );
+
+  endScreen_text.anchor.set(0.5);
+  endOverlay.position.set(screen.width / 2, screen.height / 2 - 100);
+  endOverlay.visible = false;
+
+  black_overlay = new PIXI.Graphics();
+  black_overlay.beginFill(0x000000, 0.5);
+  black_overlay.drawRect(0, 0, screen.width, screen.height);
+  black_overlay.endFill();
+  black_overlay.alpha = 0.2;
+  black_overlay.visible = false;
+
+  app.stage.addChild(black_overlay);
+
+  endOverlay.addChild(endScreen);
+  endOverlay.addChild(endScreen_text);
+  app.stage.addChild(endOverlay);
 
   // Utility functions --------------------------
 
