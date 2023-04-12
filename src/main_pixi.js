@@ -101,8 +101,10 @@ async function main() {
       document.visibilityState == "visible" &&
       playField.interactive == true
     ) {
+      console.log("geageagee");
       let time_calc = Math.round((Date.now() - time) / 1000);
       model.score += model.fishRate * time_calc;
+      model.elapsedTime = parseInt(Date.now());
 
       if (time_calc < 60 * 2) {
         model.bleedval += model.bleedrate * time_calc;
@@ -305,10 +307,10 @@ async function main() {
           bleed_visualisation(model.bleedval);
         }
 
-        second = 0.0;
         refreshTexts();
-        saveGame();
       }
+      second = 0.0;
+      saveGame();
     }
 
     cloud_1.x += 0.1;
@@ -865,7 +867,7 @@ async function main() {
   function saveGame() {
     setCookie("clickPower", parseInt(model.clickPower), 100);
     setCookie("score", parseInt(model.score), 100);
-    setCookie("elapsedTime", parseInt(new Date().getTime()), 100);
+    setCookie("elapsedTime", parseInt(Date.now()), 100);
     setCookie("fishRate", parseFloat(model.fishRate), 100);
     setCookie("bleedrate", parseFloat(model.bleedrate), 100);
     setCookie("bleedval", parseFloat(model.bleedval), 100);
