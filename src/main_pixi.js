@@ -2,10 +2,15 @@
 async function main() {
   let model = await data_init();
 
+  let w = window.innerWidth;
+  let h = window.innerHeight;
+
   let app = new PIXI.Application({
     autoResize: true,
     resolution: devicePixelRatio,
-    background: "#2ea6c9",
+    background: "#53bdff",
+    width: w,
+    height: h,
   });
   document.body.appendChild(app.view);
 
@@ -92,7 +97,10 @@ async function main() {
 
   let time = Date.now();
   document.addEventListener("visibilitychange", (event) => {
-    if (document.visibilityState == "visible") {
+    if (
+      document.visibilityState == "visible" &&
+      playField.interactive == true
+    ) {
       let time_calc = Math.round((Date.now() - time) / 1000);
       model.score += model.fishRate * time_calc;
 
@@ -109,7 +117,7 @@ async function main() {
   });
 
   window.addEventListener("resize", resize);
-  resize();
+  //resize();
 
   // Text styles --------------------------------
 
@@ -220,16 +228,16 @@ async function main() {
   sun.anchor.set(0.5);
   sun.width = 300;
   sun.height = 300;
-  sun.position.set(screen.width / 2, 350);
+  sun.position.set(w / 2, 350);
 
   sunrays.anchor.set(0.5);
   sunrays.width = 300;
   sunrays.height = 300;
-  sunrays.position.set(screen.width / 2, 350);
+  sunrays.position.set(w / 2, 350);
 
   boat.anchor.set(0.5);
   boat.scale.set(1.2);
-  boat.position.set(screen.width / 2 - 90, 530);
+  boat.position.set(w / 2 - 90, 530);
 
   playField.interactive = true;
   playField.cursor = "pointer";
@@ -242,6 +250,32 @@ async function main() {
   sun.filters = [filter];
   sunrays.filters = [filter];
 
+  if (w > 1920) {
+    let left_background = PIXI.Sprite.from(assets.background);
+    let right_background = PIXI.Sprite.from(assets.background);
+
+    left_background.y = 120;
+    right_background.y = 120;
+
+    left_background.x = -1920;
+    right_background.x = 1920;
+
+    playField.addChild(left_background);
+    playField.addChild(right_background);
+
+    left_background.filters = [filter];
+    right_background.filters = [filter];
+  }
+
+  if (h > 1080) {
+    let bottom_background = new PIXI.Graphics();
+    bottom_background.beginFill(0x194082);
+    bottom_background.drawRect(0, 960, w, h);
+    bottom_background.endFill();
+
+    playField.addChild(bottom_background);
+  }
+
   playField.addChild(background);
   playField.addChild(sun);
   playField.addChild(sunrays);
@@ -250,16 +284,7 @@ async function main() {
   playField.addChild(boat);
   playField.addChild(foreground);
 
-  // Bleedrate + Ticker -------------------------
-
-  function bleedcalc(baserate, bleedsheet) {
-    for (let i = bleedsheet.length - 1; i >= 0; i--) {
-      if (bleedsheet[i][0] < baserate) {
-        return parseInt(bleedsheet[i][1]);
-      }
-    }
-    return 0;
-  }
+  // Ticker -------------------------
 
   let second = 0.0;
   let elapsed = 0.0;
@@ -270,7 +295,6 @@ async function main() {
     second += (1 / 60) * delta;
     bird_event += (1 / 60) * delta;
 
-    // Each second
     if (second >= 1) {
       model.bleedval += model.bleedrate;
       model.fishRate -= model.bleedval;
@@ -287,47 +311,6 @@ async function main() {
       }
     }
 
-    // When bleedbegin
-    if (model.bleedrate != 0) {
-      bloomStrength += delta;
-      if (bloomStrength > 80) {
-        bloomStrength = 0;
-      }
-
-      bloomFilter.blur = (bloomStrength * 0.25) / 4;
-      alertFilter.alpha = (bloomStrength * 0.025) / 4;
-
-      bloomFilter.treshold = bloomStrength * 0.1;
-
-      // End game
-      if (model.fishRate <= 0) {
-        endOverlay.visible = true;
-        black_overlay.visible = true;
-
-        shop_button_open.interactive = false;
-        shop_button_open.buttonMode = false;
-        shop_button_closed.interactive = false;
-        shop_button_closed.buttonMode = false;
-        shop_container.visible = false;
-        playField.interactive = false;
-        playField.cursor = "default";
-
-        fish.visible = false;
-        let deadFish = PIXI.Sprite.from(assets.deadFish);
-        deadFish.scale.set(0.14);
-        deadFish.x = 50;
-        deadFish.y = 25;
-
-        deadFish.filters = [filter];
-
-        topBar.addChild(deadFish);
-
-        model.fishRate = 0;
-        refreshTexts();
-      }
-    }
-
-    // Animation
     cloud_1.x += 0.1;
     cloud_2.x += 0.1;
     if (cloud_1.x > screen.width) {
@@ -351,6 +334,57 @@ async function main() {
     }
   });
 
+  // Bleedrate -------------------------
+
+  if (model.bleedrate != 0) {
+    let bloomFilter = new PIXI.filters.BloomFilter();
+    let alertFilter = new PIXI.filters.ColorOverlayFilter();
+
+    alertFilter.color = [1, 0, 0];
+    fish_rate.filters = [bloomFilter, alertFilter];
+
+    app.ticker.add((delta) => {
+      if (model.bleedrate != 0) {
+        bloomStrength += delta;
+        if (bloomStrength > 80) {
+          bloomStrength = 0;
+        }
+
+        bloomFilter.blur = (bloomStrength * 0.25) / 4;
+        alertFilter.alpha = (bloomStrength * 0.025) / 4;
+
+        bloomFilter.treshold = bloomStrength * 0.1;
+
+        // End game
+        if (model.fishRate <= 0 && playField.interactive == true) {
+          endOverlay.visible = true;
+          black_overlay.visible = true;
+
+          shop_button_open.interactive = false;
+          shop_button_open.buttonMode = false;
+          shop_button_closed.interactive = false;
+          shop_button_closed.buttonMode = false;
+          shop_container.visible = false;
+          playField.interactive = false;
+          playField.cursor = "default";
+
+          fish.visible = false;
+          let deadFish = PIXI.Sprite.from(assets.deadFish);
+          deadFish.scale.set(0.14);
+          deadFish.x = 50;
+          deadFish.y = 25;
+
+          deadFish.filters = [filter];
+
+          topBar.addChild(deadFish);
+
+          model.fishRate = 0;
+          refreshTexts();
+        }
+      }
+    });
+  }
+
   // Top-Bar ------------------------------------
 
   let topBar = new PIXI.Container();
@@ -358,6 +392,8 @@ async function main() {
 
   let bar = PIXI.Sprite.from(assets.topBar);
   bar.filters = [filter_low];
+
+  topBar.x = w / 2 - bar.width / 2;
   topBar.addChild(bar);
 
   // Score --------------------------------------
@@ -384,12 +420,7 @@ async function main() {
     fish_rate_style
   );
 
-  let bloomFilter = new PIXI.filters.BloomFilter();
-  let alertFilter = new PIXI.filters.ColorOverlayFilter();
-
-  alertFilter.color = [1, 0, 0];
-  fish_rate.filters = [bloomFilter, alertFilter];
-  fish_rate.x = 320;
+  fish_rate.x = 350;
   fish_rate.y = 38;
 
   topBar.addChild(fish_rate);
@@ -427,14 +458,14 @@ async function main() {
   shop_button_closed.height = 95;
   shop_button_closed.width = 290;
   shop_button_closed.anchor.set(0.5);
-  shop_button_closed.position.set(screen.width / 2 + 5, 60);
+  shop_button_closed.position.set(bar.width / 2 + 5, 60);
   shop_button_closed.filters = [filter_low];
 
   const shop_button_open = PIXI.Sprite.from(assets.shop_icon_open);
   shop_button_open.height = 95;
   shop_button_open.width = 290;
   shop_button_open.anchor.set(0.5);
-  shop_button_open.position.set(screen.width / 2 + 5, 60);
+  shop_button_open.position.set(bar.width / 2 + 5, 60);
   shop_button_open.filters = [filter_low];
   shop_button_open.visible = false;
 
@@ -808,17 +839,17 @@ async function main() {
   endScreen.filters = [filter];
 
   let endScreen_text = new PIXI.Text(
-    "GAME OVER\n\nYou've extracted all available fish from \nthe ocean! Oh no!\n\n\n A game by Mille Kåge & Matias Eriksson\nThanks for playing!",
+    "GAME OVER\n\nYou've extracted all available fish from \nthe ocean! No more fish :(\n\n\n A game by Mille Kåge & Matias Eriksson\nThanks for playing!",
     endScreen_style
   );
 
   endScreen_text.anchor.set(0.5);
-  endOverlay.position.set(screen.width / 2, screen.height / 2 - 100);
+  endOverlay.position.set(w / 2, h / 2);
   endOverlay.visible = false;
 
-  black_overlay = new PIXI.Graphics();
+  let black_overlay = new PIXI.Graphics();
   black_overlay.beginFill(0x000000);
-  black_overlay.drawRect(0, 0, screen.width, screen.height);
+  black_overlay.drawRect(0, 0, w, h);
   black_overlay.endFill();
   black_overlay.alpha = 0.6;
   black_overlay.visible = false;
@@ -930,6 +961,15 @@ async function main() {
     app.stage.addChild(feedback_cont);
   }
 
+  function bleedcalc(baserate, bleedsheet) {
+    for (let i = bleedsheet.length - 1; i >= 0; i--) {
+      if (bleedsheet[i][0] < baserate) {
+        return parseInt(bleedsheet[i][1]);
+      }
+    }
+    return 0;
+  }
+
   function bleed_visualisation(bleedval) {
     let blood_cont = new PIXI.Container();
 
@@ -1017,6 +1057,46 @@ async function main() {
   }
 
   function resize() {
+    w = window.innerWidth;
+    h = window.innerHeight;
+
+    sun.position.set(w / 2, 350);
+    sunrays.position.set(w / 2, 350);
+    boat.position.set(w / 2 - 90, 530);
+
+    topBar.x = w / 2 - bar.width / 2;
+    endOverlay.position.set(w / 2, h / 2);
+
+    if (w > 1920) {
+      let left_background = PIXI.Sprite.from(assets.background);
+      let right_background = PIXI.Sprite.from(assets.background);
+
+      left_background.y = 120;
+      right_background.y = 120;
+
+      left_background.x = -1920;
+      right_background.x = 1920;
+
+      playField.addChild(left_background);
+      playField.addChild(right_background);
+
+      left_background.filters = [filter];
+      right_background.filters = [filter];
+    }
+
+    bottom_background = new PIXI.Graphics();
+    bottom_background.beginFill(0x194082);
+    bottom_background.drawRect(0, 960, w, h);
+    bottom_background.endFill();
+    playField.addChild(bottom_background);
+
+    black_overlay.x = -1000;
+    black_overlay.y = -1000;
+    black_overlay.width = w + 5000;
+    black_overlay.height = h + 5000;
+
+    shop_container.position.set(screen.width / 2 - 250, 118);
+
     app.renderer.resize(window.innerWidth, window.innerHeight);
   }
 }
