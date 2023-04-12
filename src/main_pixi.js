@@ -176,7 +176,7 @@ async function main() {
   // Intro --------------------------------
   if (model.firstTime) {
     swal({
-      title: "Welcome to the game!",
+      title: "🐟 Welcome to Fish Inc. 🐟",
       text: "As you awaken to a new day, your eyes fall upon an old envelope resting on your desk. You open it to find a letter from your grandfather, revealing that he has left his beloved fishing company to you. Do you have what it takes to tackle the competition and create the most successful fishing company in the world? \n\nGood luck! \n\nbtw, by clicking the Start button, you're accepting that cookies will be used 🍪",
       button: "Start",
       closeOnClickOutside: false,
@@ -190,7 +190,6 @@ async function main() {
       document.visibilityState == "visible" &&
       playField.interactive == true
     ) {
-      console.log("geageagee");
       let time_calc = Math.round((Date.now() - time) / 1000);
       model.score += model.fishRate * time_calc;
       model.elapsedTime = parseInt(Date.now());
