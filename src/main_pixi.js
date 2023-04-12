@@ -270,43 +270,7 @@ async function main() {
     second += (1 / 60) * delta;
     bird_event += (1 / 60) * delta;
 
-    if (model.bleedrate != 0) {
-      bloomStrength += delta;
-      if (bloomStrength > 80) {
-        bloomStrength = 0;
-      }
-
-      // End game
-      if (model.fishRate <= 0) {
-        endOverlay.visible = true;
-        black_overlay.visible = true;
-
-        shop_button_open.interactive = false;
-        shop_button_open.buttonMode = false;
-        shop_button_closed.interactive = false;
-        shop_button_closed.buttonMode = false;
-        shop_container.visible = false;
-
-        fish.visible = false;
-        let deadFish = PIXI.Sprite.from(assets.deadFish);
-        deadFish.scale.set(0.14);
-        deadFish.x = 50;
-        deadFish.y = 25;
-
-        deadFish.filters = [filter];
-
-        topBar.addChild(deadFish);
-
-        model.fishRate = 0;
-        refreshTexts();
-      }
-    }
-
-    bloomFilter.blur = (bloomStrength * 0.25) / 4;
-    alertFilter.alpha = (bloomStrength * 0.025) / 4;
-
-    bloomFilter.treshold = bloomStrength * 0.1;
-
+    // Each second
     if (second >= 1) {
       model.bleedval += model.bleedrate;
       model.fishRate -= model.bleedval;
@@ -323,7 +287,47 @@ async function main() {
       }
     }
 
-    //console.log(addRate);
+    // When bleedbegin
+    if (model.bleedrate != 0) {
+      bloomStrength += delta;
+      if (bloomStrength > 80) {
+        bloomStrength = 0;
+      }
+
+      bloomFilter.blur = (bloomStrength * 0.25) / 4;
+      alertFilter.alpha = (bloomStrength * 0.025) / 4;
+
+      bloomFilter.treshold = bloomStrength * 0.1;
+
+      // End game
+      if (model.fishRate <= 0) {
+        endOverlay.visible = true;
+        black_overlay.visible = true;
+
+        shop_button_open.interactive = false;
+        shop_button_open.buttonMode = false;
+        shop_button_closed.interactive = false;
+        shop_button_closed.buttonMode = false;
+        shop_container.visible = false;
+        playField.interactive = false;
+        playField.cursor = "default";
+
+        fish.visible = false;
+        let deadFish = PIXI.Sprite.from(assets.deadFish);
+        deadFish.scale.set(0.14);
+        deadFish.x = 50;
+        deadFish.y = 25;
+
+        deadFish.filters = [filter];
+
+        topBar.addChild(deadFish);
+
+        model.fishRate = 0;
+        refreshTexts();
+      }
+    }
+
+    // Animation
     cloud_1.x += 0.1;
     cloud_2.x += 0.1;
     if (cloud_1.x > screen.width) {
@@ -813,10 +817,10 @@ async function main() {
   endOverlay.visible = false;
 
   black_overlay = new PIXI.Graphics();
-  black_overlay.beginFill(0x000000, 0.5);
+  black_overlay.beginFill(0x000000);
   black_overlay.drawRect(0, 0, screen.width, screen.height);
   black_overlay.endFill();
-  black_overlay.alpha = 0.2;
+  black_overlay.alpha = 0.6;
   black_overlay.visible = false;
 
   app.stage.addChild(black_overlay);
@@ -837,8 +841,6 @@ async function main() {
     setCookie("data", JSON.stringify(data), 100);
 
     refreshTexts();
-
-    //console.log("Game saved");
   }
 
   function refreshTexts() {
