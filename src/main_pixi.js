@@ -15,7 +15,6 @@ async function main() {
   document.body.appendChild(app.view);
 
   // Load assets -------------------------
-  // Playfield
   PIXI.Assets.add("background", "../public/images/background.png");
   PIXI.Assets.add("foreground", "../public/images/foreground.png");
   PIXI.Assets.add("cloud_1", "../public/images/cloud.png");
@@ -24,16 +23,13 @@ async function main() {
   PIXI.Assets.add("sunrays", "../public/images/sunrays.png");
   PIXI.Assets.add("boat", "../public/images/boat.png");
 
-  // Endscreen
   PIXI.Assets.add("endScreen", "../public/images/endgame_background.png");
 
-  // UI
   PIXI.Assets.add("topBar", "../public/images/topBar.png");
   PIXI.Assets.add("fish", "../public/images/fish.png");
   PIXI.Assets.add("deadFish", "../public/images/deadFish.png");
   PIXI.Assets.add("format", "../public/images/format.png");
 
-  // Shop
   PIXI.Assets.add("shop_icon", "../public/images/shop_icon.png");
   PIXI.Assets.add("shop_icon_open", "../public/images/shop_icon_open.png");
   PIXI.Assets.add(
@@ -84,42 +80,6 @@ async function main() {
     "bird",
     "explosion",
   ]);
-
-  if (model.firstTime) {
-    swal({
-      title: "Welcome to the game!",
-      text: "As you awaken to a new day, your eyes fall upon an old envelope resting on your desk. You open it to find a letter from your grandfather, revealing that he has left his beloved fishing company to you. Do you have what it takes to tackle the competition and create the most successful fishing company in the world? \n\nGood luck! \n\nbtw, by clicking the Start button, you're accepting that cookies will be used 🍪",
-      button: "Start",
-      closeOnClickOutside: false,
-      closeOnEsc: false,
-    });
-  }
-
-  let time = Date.now();
-  document.addEventListener("visibilitychange", (event) => {
-    if (
-      document.visibilityState == "visible" &&
-      playField.interactive == true
-    ) {
-      console.log("geageagee");
-      let time_calc = Math.round((Date.now() - time) / 1000);
-      model.score += model.fishRate * time_calc;
-      model.elapsedTime = parseInt(Date.now());
-
-      if (time_calc < 60 * 2) {
-        model.bleedval += model.bleedrate * time_calc;
-      } else {
-        model.bleedval += model.bleedrate * 60 * 2;
-      }
-      saveGame();
-      refreshTexts();
-    } else {
-      time = Date.now();
-    }
-  });
-
-  window.addEventListener("resize", resize);
-  //resize();
 
   // Text styles --------------------------------
 
@@ -196,13 +156,58 @@ async function main() {
     fontSize: 36,
   });
 
+  const bird_feedback_style = new PIXI.TextStyle({
+    fontFamily: '"Comic Sans MS", cursive, sans-serif',
+    align: "center",
+    fill: "0x7CFC00",
+    fontSize: 36,
+  });
+
   const bleedsheet = [
     [3500000, 100],
-    [25000000, 1000],
-    [50000000, 5000],
-    [200000000, 10000],
+    [25000000, 500],
+    [50000000, 1000],
+    [200000000, 5000],
     [500000000, 250000],
+    [1000000000, 1000000],
+    [1500000000, 10000000],
   ];
+
+  // Intro --------------------------------
+  if (model.firstTime) {
+    swal({
+      title: "Welcome to the game!",
+      text: "As you awaken to a new day, your eyes fall upon an old envelope resting on your desk. You open it to find a letter from your grandfather, revealing that he has left his beloved fishing company to you. Do you have what it takes to tackle the competition and create the most successful fishing company in the world? \n\nGood luck! \n\nbtw, by clicking the Start button, you're accepting that cookies will be used 🍪",
+      button: "Start",
+      closeOnClickOutside: false,
+      closeOnEsc: false,
+    });
+  }
+
+  let time = Date.now();
+  document.addEventListener("visibilitychange", (event) => {
+    if (
+      document.visibilityState == "visible" &&
+      playField.interactive == true
+    ) {
+      console.log("geageagee");
+      let time_calc = Math.round((Date.now() - time) / 1000);
+      model.score += model.fishRate * time_calc;
+      model.elapsedTime = parseInt(Date.now());
+
+      if (time_calc < 60 * 2) {
+        model.bleedval += model.bleedrate * time_calc;
+      } else {
+        model.bleedval += model.bleedrate * 60 * 2;
+      }
+      saveGame();
+      refreshTexts();
+    } else {
+      time = Date.now();
+    }
+  });
+
+  window.addEventListener("resize", resize);
 
   // Playfield ----------------------------------
 
@@ -286,107 +291,6 @@ async function main() {
   playField.addChild(boat);
   playField.addChild(foreground);
 
-  // Ticker -------------------------
-
-  let second = 0.0;
-  let elapsed = 0.0;
-  let bloomStrength = 0;
-  let bird_event = 0;
-
-  app.ticker.add((delta) => {
-    second += (1 / 60) * delta;
-    bird_event += (1 / 60) * delta;
-
-    if (second >= 1) {
-      model.bleedval += model.bleedrate;
-      model.fishRate -= model.bleedval;
-      if (model.fishRate > 0) {
-        model.score += parseInt(model.fishRate);
-
-        if (model.bleedrate > 0) {
-          bleed_visualisation(model.bleedval);
-        }
-
-        refreshTexts();
-      }
-      second = 0.0;
-      saveGame();
-    }
-
-    cloud_1.x += 0.1;
-    cloud_2.x += 0.1;
-    if (cloud_1.x > screen.width) {
-      cloud_1.x = -300;
-    }
-
-    if (cloud_2.x > screen.width) {
-      cloud_2.x = -300;
-    }
-
-    elapsed += 0.01;
-    sunrays.scale.x = 0.6 + Math.sin(elapsed) * 0.05;
-    sunrays.scale.y = 0.6 + Math.sin(elapsed) * 0.05;
-
-    boat.y += Math.sin(elapsed) * 0.04;
-    boat.x += Math.sin(elapsed * 0.8) * 0.02;
-
-    if (bird_event > 100) {
-      addBird();
-      bird_event = 0;
-    }
-  });
-
-  // Bleedrate -------------------------
-
-  if (model.bleedrate != 0) {
-    let bloomFilter = new PIXI.filters.BloomFilter();
-    let alertFilter = new PIXI.filters.ColorOverlayFilter();
-
-    alertFilter.color = [1, 0, 0];
-    fish_rate.filters = [bloomFilter, alertFilter];
-
-    app.ticker.add((delta) => {
-      if (model.bleedrate != 0) {
-        bloomStrength += delta;
-        if (bloomStrength > 80) {
-          bloomStrength = 0;
-        }
-
-        bloomFilter.blur = (bloomStrength * 0.25) / 4;
-        alertFilter.alpha = (bloomStrength * 0.025) / 4;
-
-        bloomFilter.treshold = bloomStrength * 0.1;
-
-        // End game
-        if (model.fishRate <= 0 && playField.interactive == true) {
-          endOverlay.visible = true;
-          black_overlay.visible = true;
-
-          shop_button_open.interactive = false;
-          shop_button_open.buttonMode = false;
-          shop_button_closed.interactive = false;
-          shop_button_closed.buttonMode = false;
-          shop_container.visible = false;
-          playField.interactive = false;
-          playField.cursor = "default";
-
-          fish.visible = false;
-          let deadFish = PIXI.Sprite.from(assets.deadFish);
-          deadFish.scale.set(0.14);
-          deadFish.x = 50;
-          deadFish.y = 25;
-
-          deadFish.filters = [filter];
-
-          topBar.addChild(deadFish);
-
-          model.fishRate = 0;
-          refreshTexts();
-        }
-      }
-    });
-  }
-
   // Top-Bar ------------------------------------
 
   let topBar = new PIXI.Container();
@@ -422,7 +326,7 @@ async function main() {
     fish_rate_style
   );
 
-  fish_rate.x = 350;
+  fish_rate.x = 330;
   fish_rate.y = 38;
 
   topBar.addChild(fish_rate);
@@ -445,11 +349,18 @@ async function main() {
     format_button.tint = 0xffffff;
   });
 
+  let easterEgg_counter = 0;
   format_button.on("pointerdown", () => {
     model.formattingStyle =
       model.formattingStyle == "default" ? "scientific" : "default";
     setCookie("formattingStyle", model.formattingStyle, 100);
     refreshTexts();
+
+    easterEgg_counter += 1;
+
+    if (easterEgg_counter == 20) {
+      easterEgg();
+    }
   });
 
   topBar.addChild(format_button);
@@ -862,6 +773,107 @@ async function main() {
   endOverlay.addChild(endScreen_text);
   app.stage.addChild(endOverlay);
 
+  // Ticker -------------------------
+
+  let second = 0.0;
+  let elapsed = 0.0;
+  let bloomStrength = 0;
+  let bird_event = 0;
+
+  app.ticker.add((delta) => {
+    second += (1 / 60) * delta;
+    bird_event += (1 / 60) * delta;
+
+    if (second >= 1 && endOverlay.visible == false) {
+      model.bleedval += model.bleedrate;
+      model.fishRate -= model.bleedval;
+      if (model.fishRate > 0) {
+        model.score += parseInt(model.fishRate);
+
+        if (model.bleedrate > 0) {
+          feedback(model.bleedval, "bleed");
+        }
+
+        refreshTexts();
+      }
+      second = 0.0;
+      saveGame();
+    }
+
+    cloud_1.x += 0.1;
+    cloud_2.x += 0.1;
+    if (cloud_1.x > screen.width) {
+      cloud_1.x = -300;
+    }
+
+    if (cloud_2.x > screen.width) {
+      cloud_2.x = -300;
+    }
+
+    elapsed += 0.01;
+    sunrays.scale.x = 0.6 + Math.sin(elapsed) * 0.05;
+    sunrays.scale.y = 0.6 + Math.sin(elapsed) * 0.05;
+
+    boat.y += Math.sin(elapsed) * 0.04;
+    boat.x += Math.sin(elapsed * 0.8) * 0.02;
+
+    if (bird_event > 100) {
+      addBird("normal");
+      bird_event = 0;
+    }
+  });
+
+  // Bleedrate -------------------------
+
+  if (model.bleedrate != 0) {
+    let bloomFilter = new PIXI.filters.BloomFilter();
+    let alertFilter = new PIXI.filters.ColorOverlayFilter();
+
+    alertFilter.color = [1, 0, 0];
+    fish_rate.filters = [bloomFilter, alertFilter];
+
+    app.ticker.add((delta) => {
+      if (model.bleedrate != 0) {
+        bloomStrength += delta;
+        if (bloomStrength > 80) {
+          bloomStrength = 0;
+        }
+
+        bloomFilter.blur = (bloomStrength * 0.25) / 4;
+        alertFilter.alpha = (bloomStrength * 0.025) / 4;
+
+        bloomFilter.treshold = bloomStrength * 0.1;
+
+        // End game
+        if (model.fishRate <= 0 && playField.interactive == true) {
+          endOverlay.visible = true;
+          black_overlay.visible = true;
+
+          shop_button_open.interactive = false;
+          shop_button_open.buttonMode = false;
+          shop_button_closed.interactive = false;
+          shop_button_closed.buttonMode = false;
+          shop_container.visible = false;
+          playField.interactive = false;
+          playField.cursor = "default";
+
+          fish.visible = false;
+          let deadFish = PIXI.Sprite.from(assets.deadFish);
+          deadFish.scale.set(0.14);
+          deadFish.x = 50;
+          deadFish.y = 25;
+
+          deadFish.filters = [filter];
+
+          topBar.addChild(deadFish);
+
+          model.fishRate = 0;
+          refreshTexts();
+        }
+      }
+    });
+  }
+
   // Utility functions --------------------------
 
   function saveGame() {
@@ -972,35 +984,66 @@ async function main() {
     return 0;
   }
 
-  function bleed_visualisation(bleedval) {
-    let blood_cont = new PIXI.Container();
+  function feedback(val, type) {
+    let feedback_cont = new PIXI.Container();
 
-    let bleed_text = new PIXI.Text("-" + formatNumber(bleedval), bleed_style);
-    bleed_text.anchor.set(0.5);
-    bleed_text.x = fish_rate.x + Math.random() * 100 + 200;
-    bleed_text.y = fish_rate.y + Math.random() * 100 - 30;
+    if (type == "bleed") {
+      let bleed_text = new PIXI.Text("-" + formatNumber(val), bleed_style);
+      bleed_text.anchor.set(0.5);
+      bleed_text.x = fish_rate.x + Math.random() * 100 + 200;
+      bleed_text.y = fish_rate.y + Math.random() * 100 - 30;
 
-    blood_cont.addChild(bleed_text);
+      feedback_cont.addChild(bleed_text);
 
-    let blood_ticker = new PIXI.Ticker();
-    let elapsed = 0.0;
-    let alpha = 1.0;
-    blood_ticker.add((delta) => {
-      elapsed += delta;
-      blood_cont.alpha = alpha;
-      alpha -= 0.005;
-    });
-    blood_ticker.start();
+      let blood_ticker = new PIXI.Ticker();
+      let elapsed = 0.0;
+      let alpha = 1.0;
+      blood_ticker.add((delta) => {
+        elapsed += delta;
+        feedback_cont.alpha = alpha;
+        alpha -= 0.005;
+      });
+      blood_ticker.start();
 
-    if (elapsed > 5.0) {
-      blood_ticker.destroy();
-      app.stage.removeChild(blood_cont);
+      if (elapsed > 5.0) {
+        blood_ticker.destroy();
+        app.stage.removeChild(feedback_cont);
+      }
+
+      app.stage.addChild(feedback_cont);
     }
 
-    app.stage.addChild(blood_cont);
+    if (type == "bird") {
+      let score_text = new PIXI.Text(
+        "+" + formatNumber(val),
+        bird_feedback_style
+      );
+      score_text.anchor.set(0.5);
+      score_text.x = score_text.x + Math.random() * 50 + 200;
+      score_text.y = score_text.y + Math.random() * 50 + 50;
+
+      feedback_cont.addChild(score_text);
+
+      let blood_ticker = new PIXI.Ticker();
+      let elapsed = 0.0;
+      let alpha = 1.0;
+      blood_ticker.add((delta) => {
+        elapsed += delta;
+        feedback_cont.alpha = alpha;
+        alpha -= 0.005;
+      });
+      blood_ticker.start();
+
+      if (elapsed > 5.0) {
+        blood_ticker.destroy();
+        app.stage.removeChild(feedback_cont);
+      }
+
+      app.stage.addChild(feedback_cont);
+    }
   }
 
-  function addBird() {
+  function addBird(type) {
     let bird = PIXI.Sprite.from(assets.bird);
     bird.anchor.set(0.5);
     bird.x = Math.random() * (app.screen.width - 200) + 100;
@@ -1011,9 +1054,12 @@ async function main() {
     bird.buttonMode = true;
     bird.cursor = "pointer";
     bird.on("pointerdown", () => {
-      model.score += model.score * 0.25;
-      setCookie("score", parseInt(model.score), 100);
-      refreshTexts();
+      if (type != "easter") {
+        feedback(formatNumber(Math.round(model.score * 0.25)), "bird");
+        model.score += Math.round(model.score * 0.25);
+        setCookie("score", parseInt(model.score), 100);
+        refreshTexts();
+      }
 
       let explosion = PIXI.Sprite.from(assets.explosion);
       explosion.anchor.set(0.5);
@@ -1056,6 +1102,14 @@ async function main() {
     gull_ticker.start();
 
     app.stage.addChild(bird);
+  }
+
+  function easterEgg() {
+    for (let i = 1; i < 30; i++) {
+      setTimeout(function timer() {
+        addBird("easter");
+      }, i * 100);
+    }
   }
 
   function resize() {

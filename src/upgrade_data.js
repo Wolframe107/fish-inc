@@ -100,7 +100,7 @@ let data = {
     number: 9,
     cost: 10000000000,
     baserate: 100000000,
-    max_amount: 100,
+    max_amount: 20,
     amount: 0,
     upgraded: 0,
     upgrade_cost: 700000000,
